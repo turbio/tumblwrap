@@ -28,7 +28,7 @@ class TumblWrap
 
 	def post(data)
 		@posts.find do |p|
-			p.id == data['id']
+			p.id == data['id'] || p.id == data['post_id'].to_i
 		end || (@posts << Post.new(self, data)).last
 	end
 
@@ -68,7 +68,6 @@ class Blog
 
 		loaded_posts = @tumblwrap.api.posts(
 			@name,
-			:reblog_info => true,
 			:notes_info => true)['posts']
 
 		loaded_posts.each do |p|
@@ -85,29 +84,30 @@ class Blog
 end
 
 class Post
-	attr_reader :id, :blog, :url
+	attr_reader :id, :blog, :url, :type, :tags, :parent, :title, :body
 
-	def initialize(tumblwrap, data=nil, id: nil, blog: nil)
+	def initialize(tumblwrap, data)
 		@tumblwrap = tumblwrap
 
-		@has_data = !data.nil?
+		@blog = @tumblwrap.blog(data['blog_name'])
 
-		if @has_data
-			@blog = @tumblwrap.blog(data['blog_name'])
+		@id = data['id'] || data['post_id'].to_i
+		@url = data['url']
+		@type = data['type']
+		@tags = data['tags']
+		@title = data['title']
+		@body = data['body']
+		@parent =
+			@tumblwrap.blog(data['reblog_parent_blog_name']) if !data['reblog_parent_blog_name'].nil?
 
-			@parent = @tumblwrap.post(
-				@tumblwrap,
-				id: data['reblogged_from_id'],
-				blog: data['reblogged_from_name'])
-
-			@id = data['id']
-			@url = data['url']
-			@type = data['type']
-			@tags = data['tags']
-		else
-			@id = id
-			@blog = blog
-		end
+		data['notes'].each do |note|
+			if note['type'] == 'reblog'
+				@tumblwrap.post note
+				if note['post_id'].to_i == @id && !note['reblog_parent_blog_name'].nil?
+					@parent = @tumblwrap.blog(note['reblog_parent_blog_name'])
+				end
+			end
+		end if !data['notes'].nil?
 	end
 end
 

@@ -1,6 +1,4 @@
 require_relative 'tumblwrap'
-require 'graphviz'
-require 'awesome_print'
 
 blogname = ARGV[0]
 
@@ -23,9 +21,15 @@ blog = tumblr.blog 'masonsleeping'
 puts blog.name
 puts blog.title
 puts blog.description
-puts blog.avatar_url
 
-puts blog.posts.first
+blog.posts.each do |post|
+	puts "id: #{post.id}"
+	puts "title: #{post.title}"
+	puts "body: #{post.body}"
+	puts "type: #{post.type}"
+	puts "from: #{post.parent && post.parent.name}"
+	puts
+end
 
 #blog_stack_top = {name: blogname, refs: Array.new, count: 1}
 #current_location = blog_stack_top
