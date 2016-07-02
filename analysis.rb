@@ -16,7 +16,7 @@ tumblr = TumblWrap.new
 #puts blog.description
 #puts blog.avatar_url
 
-blog = tumblr.blog 'masonsleeping'
+blog = tumblr.blog blogname
 
 puts blog.name
 puts blog.title
